@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>JalSanchay – Rooftop Rainwater Planner</title>
+  <meta name="description" content="Draw your roof on a satellite map and get a rainwater harvesting plan: yearly yield, tank and recharge pit size, itemised cost and payback." />
+  <meta name="theme-color" content="#0f5f5a" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💧</text></svg>" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <canvas id="waterCanvas" class="water-canvas no-print" aria-hidden="true"></canvas>
+  <header class="nav no-print">
+    <a class="brand" href="#top"><span aria-hidden="true">💧</span> JalSanchay</a>
+    <nav>
+      <a href="#planner">Planner</a>
+      <a href="#how">How it works</a>
+      <a href="#saved">My reports</a>
+      <a href="#faq">FAQ</a>
+    </nav>
+  </header>
+
+  <main id="top">
+    <section class="hero no-print">
+      <div class="hero-inner">
+        <p class="eyebrow">Rooftop Rainwater Planner · छत का वर्षा जल</p>
+
+        <!-- Dynamic split-water text headline -->
+        <div class="water-text-container" id="waterTextContainer">
+          <!-- Layer 1: Above water (Electric Blue & Midnight Navy) -->
+          <h1 class="water-title title-above" id="titleAbove" aria-label="Smart Rainwater Harvesting">
+            <span class="word-blue">Smart</span><br />
+            <span class="word-navy">Rainwater</span><br />
+            <span class="word-navy">Harvesting</span>
+          </h1>
+
+          <!-- Layer 2: Under water (Pure White with Refraction Wave Distortion) -->
+          <h1 class="water-title title-under" id="titleUnder" aria-hidden="true">
+            <span class="word-white">Smart</span><br />
+            <span class="word-white">Rainwater</span><br />
+            <span class="word-white">Harvesting</span>
+          </h1>
+        </div>
+
+        <p class="lead">Trace your roof on a satellite map, answer three quick questions, and get a tank and recharge pit plan with an itemised cost, ready to save as a PDF.</p>
+      </div>
+
+      <!-- Interactive CTA & Flow Group (centers and gets bigger on scroll) -->
+      <div class="hero-cta-group" id="heroCtaGroup">
+        <div class="hero-actions" id="heroActions">
+          <a class="btn hero-get-started" id="getStartedBtn" href="#planner">Get Started <span class="btn-arrow" aria-hidden="true">→</span></a>
+        </div>
+
+        <!-- Water journey -->
+        <div class="flow" id="heroFlow" aria-label="Journey of rainwater: roof, filter, tank, recharge pit">
+          <svg viewBox="0 0 760 150" role="img" aria-hidden="true">
+            <defs>
+              <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                <path d="M0 0 L10 5 L0 10 z" fill="#93c5fd" />
+              </marker>
+            </defs>
+            <g class="flow-line" stroke="#93c5fd" stroke-width="3" fill="none" marker-end="url(#arrow)">
+              <path d="M150 70 H215" /><path d="M345 70 H410" /><path d="M540 70 H605" />
+            </g>
+            <g fill="#073b75" stroke="#93c5fd" stroke-width="2">
+              <rect x="20" y="26" width="130" height="88" rx="16" />
+              <rect x="215" y="26" width="130" height="88" rx="16" />
+              <rect x="410" y="26" width="130" height="88" rx="16" />
+              <rect x="605" y="26" width="130" height="88" rx="16" />
+            </g>
+            <g fill="#fff" font-family="Plus Jakarta Sans, sans-serif" text-anchor="middle">
+              <text x="85" y="58" font-size="26">🏠</text><text x="85" y="85" font-size="13" font-weight="600">Roof catchment</text><text x="85" y="103" font-size="11" fill="#bfdbfe">छत</text>
+              <text x="280" y="58" font-size="26">🧪</text><text x="280" y="85" font-size="13" font-weight="600">Filter unit</text><text x="280" y="103" font-size="11" fill="#bfdbfe">फ़िल्टर</text>
+              <text x="475" y="58" font-size="26">🛢️</text><text x="475" y="85" font-size="13" font-weight="600">Storage tank</text><text x="475" y="103" font-size="11" fill="#bfdbfe">टंकी</text>
+              <text x="670" y="58" font-size="26">⛲</text><text x="670" y="85" font-size="13" font-weight="600">Recharge pit</text><text x="670" y="103" font-size="11" fill="#bfdbfe">रिचार्ज गड्ढा</text>
+            </g>
+          </svg>
+        </div>
+      </div>
+    </section>
+
+  <!-- Planner Modal Dialog (Opens on 'Get Started' or 'Planner' click) -->
+  <div id="plannerModal" class="planner-modal-backdrop no-print" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="planner-modal-container">
+      <div class="planner-modal-header">
+        <div>
+          <h2 id="modalTitle" class="modal-title">Plan your system</h2>
+          <p class="modal-subtitle">Satellite rooftop calculator & rainwater harvesting plan</p>
+        </div>
+        <button type="button" class="modal-close-btn" id="closePlannerBtn" aria-label="Close planner">✕</button>
+      </div>
+
+      <div class="planner-modal-body" id="plannerModalBody">
+        <section id="planner" class="planner-modal-content">
+          <!-- Voice assistant -->
+          <div class="voice no-print">
+            <button type="button" id="micBtn" class="mic" aria-pressed="false">🎤 <span id="micLabel">बोलकर पूछें · Ask by voice</span></button>
+            <select id="voiceLang" aria-label="Voice language">
+              <option value="hi-IN">हिन्दी</option>
+              <option value="en-IN">English</option>
+            </select>
+            <p id="voiceStatus" class="voice-status" aria-live="polite">Try: “Roof 120 square meters, 4 people, Delhi, concrete.” / “छत 1000 वर्ग फीट, 4 लोग, जयपुर।”</p>
+          </div>
+
+          <div class="planner-grid">
+            <!-- Map -->
+            <div class="map-card">
+              <div class="map-tools no-print">
+                <input type="search" id="searchBox" placeholder="Search your address or area" aria-label="Search address" />
+                <button type="button" class="btn small" id="searchBtn">Search</button>
+                <button type="button" class="btn small ghost" id="locateBtn">📍 My location</button>
+              </div>
+              <div id="map" aria-label="Satellite map"></div>
+              <div class="draw-bar no-print">
+                <button type="button" class="btn small" id="drawBtn">✏️ Draw roof</button>
+                <button type="button" class="btn small ghost" id="finishBtn" disabled>Finish shape</button>
+                <button type="button" class="btn small ghost" id="undoBtn" disabled>Undo point</button>
+                <button type="button" class="btn small ghost" id="clearBtn" disabled>Clear</button>
+              </div>
+              <p id="mapHint" class="hint no-print">Search for your house, zoom in until you can see the roof, press “Draw roof”, then click each corner. Click the first point or “Finish shape” to close it.</p>
+              <p id="areaReadout" class="area-readout"></p>
+            </div>
+
+            <!-- Questionnaire -->
+            <form id="form" class="no-print" novalidate>
+              <label>Roof area (m²)
+                <input type="number" name="roofArea" id="roofArea" min="5" max="100000" step="any" placeholder="Draw on the map or type it" required />
+              </label>
+
+              <div class="row">
+                <label>Roof material
+                  <select name="roofType" id="roofType" required>
+                    <option value="concrete">Concrete / RCC</option>
+                    <option value="tile">Clay tile</option>
+                    <option value="metal">Metal sheet</option>
+                    <option value="asbestos">Asbestos / cement sheet</option>
+                    <option value="thatch">Thatch</option>
+                  </select>
+                </label>
+                <label>People in the home
+                  <input type="number" name="dwellers" id="dwellers" min="1" max="500" value="4" required />
+                </label>
+              </div>
+
+              <div class="row">
+                <label>Open ground (m²)
+                  <input type="number" name="openSpace" id="openSpace" min="0" max="100000" step="any" value="15" />
+                </label>
+                <label>Soil at your plot
+                  <select name="soil" id="soil">
+                    <option value="loamy">Loamy</option>
+                    <option value="sandy">Sandy</option>
+                    <option value="clayey">Clayey</option>
+                  </select>
+                </label>
+              </div>
+
+              <label>Tanker price (₹ per 1000 L)
+                <input type="number" name="tankerRate" id="tankerRate" min="0" max="2000" value="80" />
+              </label>
+
+              <details class="manual">
+                <summary>No map? Enter rainfall yourself</summary>
+                <label>Yearly rainfall (mm)
+                  <input type="number" name="rainfallMm" id="rainfallMm" min="50" max="12000" placeholder="Leave empty to use live weather" />
+                </label>
+              </details>
+
+              <button class="btn" type="submit" id="submit">Calculate my plan</button>
+              <p id="error" class="error" role="alert"></p>
+            </form>
+          </div>
+        </section>
+
+        <!-- Results inside modal -->
+        <section id="results" class="modal-results-section" hidden>
+          <div id="report"></div>
+        </section>
+      </div>
+    </div>
+  </div>
+
+    <section id="how" class="section no-print">
+      <h2>How it works</h2>
+      <div class="cards">
+        <article class="card"><span class="num">1</span><h3>Trace your roof</h3><p>Search your address, zoom in and click the corners of your roof. The area is measured on the spot.</p></article>
+        <article class="card"><span class="num">2</span><h3>We check the rain</h3><p>Your pin is matched to ten years of local daily rainfall, so the yield reflects your neighbourhood.</p></article>
+        <article class="card"><span class="num">3</span><h3>Get sizes and costs</h3><p>See the tank size, recharge pit size, an itemised cost list and the payback time.</p></article>
+        <article class="card"><span class="num">4</span><h3>Save or print</h3><p>Download the plan as a PDF or keep it in My reports to open later.</p></article>
+      </div>
+    </section>
+
+    <section id="saved" class="section no-print">
+      <h2>My reports</h2>
+      <p class="muted">Saved on this device only.</p>
+      <div id="savedList"></div>
+    </section>
+
+    <section id="faq" class="section no-print">
+      <h2>Common questions</h2>
+      <details><summary>How accurate is the estimate?</summary><p>It uses ten-year average rainfall for your pin and standard runoff factors. Real rainfall changes from year to year, so treat the figures as a guide, not a guarantee.</p></details>
+      <details><summary>Is harvested water safe to drink?</summary><p>Not without proper treatment. Use it for flushing, washing, gardening and recharge unless you add filtration and disinfection designed for drinking water.</p></details>
+      <details><summary>Are the prices exact?</summary><p>No. They come from rough rates kept in the app's data file. Get quotes from local suppliers before you build.</p></details>
+      <details><summary>Why does the voice button not work?</summary><p>Voice input relies on your browser's speech recognition. It works best in Chrome and Edge, needs microphone permission and an internet connection.</p></details>
+    </section>
+  </main>
+
+  <footer class="footer no-print">
+    <p>© <span id="year"></span> JalSanchay · Rainfall data: Open-Meteo · Maps: Esri, OpenStreetMap · Estimates are for planning only.</p>
+  </footer>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Turf.js/6.5.0/turf.min.js"></script>
+  <script src="config.js"></script>
+  <script src="map.js"></script>
+  <script src="voice.js"></script>
+  <script src="water.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

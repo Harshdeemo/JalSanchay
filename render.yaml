@@ -1,0 +1,12 @@
+# Optional: lets Render create the backend service from this repo (Blueprint)
+services:
+  - type: web
+    name: jalsanchay-api
+    runtime: node
+    rootDir: backend
+    buildCommand: npm install
+    startCommand: npm start
+    plan: free
+    envVars:
+      - key: CORS_ORIGIN
+        value: "*"   # replace with your frontend URL after deploying it
